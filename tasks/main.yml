@@ -1,0 +1,62 @@
+---
+- fail:
+    msg: unsupported platform -- please contact the role maintainer for support
+  name: assert the target platform is supported
+  when: ansible_distribution not in ['Debian']
+- command: ls /home
+  register: cmd
+- debug:
+    msg: deluser will segfault if LANG!=C -- http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=660406
+- environment:
+    LANG: C
+    LC_CTYPE: C
+  name: delete user
+  user:
+    name: '{{ item }}'
+    state: absent
+  when: ansible_ssh_user != item
+  with_items: cmd.stdout_lines|intersect(luser_all_users)|difference(luser_authorized_users)
+- file:
+    path: /etc/sudoers.d/{{ item }}
+    state: absent
+  name: remove credentials
+  when: ansible_ssh_user != item
+  with_items: cmd.stdout_lines|intersect(luser_all_users)|difference(luser_authorized_users)
+- name: add user
+  user:
+    name: '{{ item }}'
+    shell: /bin/bash
+    state: present
+  with_items: luser_authorized_users
+- file:
+    dest: /home/{{ item }}/.ssh
+    group: '{{ item }}'
+    mode: '700'
+    owner: '{{ item }}'
+    state: directory
+  name: create .ssh/
+  with_items: luser_authorized_users
+- copy:
+    dest: /home/{{ item }}/.ssh/authorized_keys
+    group: '{{ item }}'
+    mode: '600'
+    owner: '{{ item }}'
+    src: '{{ luser_path }}/{{ item }}.pub'
+  name: create .ssh/authorized_keys
+  with_items: luser_authorized_users
+- copy:
+    dest: /etc/sudoers.d/{{ item }}
+    mode: '440'
+    src: '{{ luser_path }}/{{ item }}.sudoers'
+  name: add credentials
+  with_items: luser_authorized_users
+- command: usermod -G libvirt -a webvirtmgr
+  name: add webvirtmgr to libvirt group
+  when: '''webvirtmgr'' in luser_authorized_users'
+- meta: flush_handlers
+- debug:
+    msg: 'WARNING: if the current user is root, this must be the last task! hence
+      the flush above'
+- command: passwd -l root
+  name: lock root account -- use an authorized user account for subsequent provisionings
+  when: luser_locked_root

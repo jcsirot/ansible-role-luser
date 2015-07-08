@@ -1,0 +1,16 @@
+---
+version: "1-SNAPSHOT"
+variables:
+- name: user_authorized_users
+  values: "(list)"
+  description: "list of authorized users among all users"
+- name: luser_locked_root
+  values: "true, false"
+  default: false
+  description: "if yes, this must be the last playbook action if the current user is root"
+- name: luser_all_users
+  values: "(list)"
+  description: "list of all managed users"
+- name: luser_path
+  values: "(path)"
+  description: "local directory containing all <user>.pub and <user>.sudoers files"
