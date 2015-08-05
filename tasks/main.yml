@@ -5,6 +5,8 @@
   when: ansible_distribution not in ['Debian', 'CentOS']
 - command: ls /home
   register: cmd
+  always_run: true
+  changed_when: false
 - debug:
     msg: deluser will segfault if LANG!=C -- http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=660406
 - environment:
