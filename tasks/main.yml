@@ -2,7 +2,7 @@
 - fail:
     msg: unsupported platform -- please contact the role maintainer for support
   name: assert the target platform is supported
-  when: ansible_distribution not in ['Debian']
+  when: ansible_distribution not in ['Debian', 'CentOS']
 - command: ls /home
   register: cmd
 - debug:

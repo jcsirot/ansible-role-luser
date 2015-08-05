@@ -85,3 +85,4 @@ galaxy_info:
   #  - lenny
   #  - squeeze
     - wheezy
+  - name: CentOS
